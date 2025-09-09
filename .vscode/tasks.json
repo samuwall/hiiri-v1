@@ -1,0 +1,14 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "type": "shell",
+      "label": "build_debug",
+      "options": {
+        "cwd": "${fileDirname}/.."
+      },
+      "command": "make dbg",
+      "problemMatcher": "$gcc"
+    }
+  ]
+}

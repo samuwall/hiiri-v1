@@ -1,0 +1,11 @@
+This repository is multi-licensed:
+
+- fw/: MIT
+
+- tools/: MIT
+
+- hw/: CERN-OHL-P-2.0
+
+See fw/LICENSE, tools/LICENSE, and hw/LICENSE for full license texts.
+
+Unless otherwise noted, files inherit the license of their containing directory.

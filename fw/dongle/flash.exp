@@ -1,0 +1,22 @@
+#!/usr/bin/expect
+
+set elf [lindex $argv 0]
+
+proc expect_jlink {id command} {
+    expect -i $id "J-Link>" {
+        send -i $id "$command\r"
+    }
+}
+
+spawn JLinkExe -device NRF52840_xxAA -if SWD -speed 4000
+set jlink $spawn_id
+
+expect_jlink $jlink "connect"
+expect_jlink $jlink "h"
+expect_jlink $jlink "r"
+expect_jlink $jlink "loadfile $elf"
+sleep 0.5
+expect_jlink $jlink "r"
+expect_jlink $jlink "exit"
+
+expect -i $jlink eof

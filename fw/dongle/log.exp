@@ -1,0 +1,72 @@
+#!/usr/bin/expect
+
+##-------------------------- input elf file ---------------------------------##
+
+set elf "build/dongle.elf"
+
+##------------------------- config / arg parsing ----------------------------##
+
+set timeout -1
+set run_time 5
+set output "telnet.txt"
+
+for {set i 0} {$i < [llength $argv]} {incr i} {
+    switch [lindex $argv $i] {
+        "-t" {
+            if {$i + 1 < [llength $argv]} {
+                incr i
+                set run_time [lindex $argv $i]
+            } else {
+                puts "Error: Missing time value after -t"
+                exit 1
+            }
+        }
+        "-o" {
+            if {$i + 1 < [llength $argv]} {
+                incr i
+                set output [lindex $argv $i]
+            } else {
+                puts "Error: Missing filepath after -o"
+                exit 1
+            }
+        }
+    }
+}
+
+##------------------------- main expect function ----------------------------##
+
+proc expect_jlink {id command} {
+    expect -i $id "J-Link>" {
+        send -i $id "$command\r"
+    }
+}
+
+##--------------------------- script logic ----------------------------------##
+
+spawn JLinkExe -device NRF52840_xxAA -if SWD -speed 4000
+set jlink $spawn_id
+
+expect_jlink $jlink "connect"
+expect_jlink $jlink "h"
+expect_jlink $jlink "r"
+expect_jlink $jlink "loadfile $elf"
+
+# segger recommends a delay of 1 second after flashing before executing
+# https://wiki.segger.com/J-Link_cannot_connect_to_the_CPU#Target_connection
+sleep 1
+
+expect_jlink $jlink "r"
+
+spawn bash -c "telnet -4 localhost 19021 > \"$output\""
+set tel $spawn_id
+
+expect_jlink $jlink "g"
+
+sleep $run_time
+
+expect_jlink $jlink "h"
+expect_jlink $jlink "exit"
+
+# wait for both processes to finish
+expect -i $jlink eof
+expect -i $tel eof
